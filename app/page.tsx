@@ -3,307 +3,90 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type Activity = {
-  id: number;
-  category: string;
-  title: string;
-  venue: string;
-  time: string;
-  duration: string;
-  distance: number;
-  price: string;
-  priceNote: string;
-  group: string;
-  supports: string[];
-  requestSupports: string[];
-  verified: string;
-  verifiedType: "facility" | "api";
-  description: string;
-  capacity: string;
+  id: number; category: string; title: string; venue: string; address: string; time: string;
+  startHours: number[]; weekdays: string[]; duration: string; distance: number; price: string;
+  priceNote: string; group: string; maxPeople: number; supports: string[]; requestSupports: string[];
+  verified: string; verifiedType: "facility" | "api"; description: string; capacity: string; phone: string;
+  operatingStatus: "정상 운영" | "일부 운영" | "휴관";
+  groupBooking: "접수 가능" | "전화 문의 필요" | "접수 마감";
+  wheelchairStatus: "전체 경로 가능" | "일부 경로 가능" | "현재 불가";
+  signLanguage: "7일 전 요청 시 협의" | "지정 회차 제공" | "제공하지 않음" | "확인되지 않음";
+  temporaryNote: string;
 };
 
-const activities: Activity[] = [
-  {
-    id: 1,
-    category: "전시·박물관",
-    title: "색과 소리로 만나는 현대미술",
-    venue: "예시 문화예술센터",
-    time: "금요일 11:00 · 14:00",
-    duration: "관람 70분",
-    distance: 22,
-    price: "장애인 무료",
-    priceNote: "인솔자 1인 무료",
-    group: "10인 이상 사전예약",
-    supports: ["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"],
-    requestSupports: ["수어 통역"],
-    verified: "오늘 09:20",
-    verifiedType: "facility",
-    description: "소리와 색을 함께 경험하며 작품을 감상하는 단체 해설 프로그램입니다.",
-    capacity: "회차당 15명",
-  },
-  {
-    id: 2,
-    category: "체험",
-    title: "손으로 만드는 도자기 접시",
-    venue: "예시 생활문화공방",
-    time: "금요일 13:00",
-    duration: "체험 90분",
-    distance: 18,
-    price: "1인 8,000원",
-    priceNote: "10인 이상 20% 할인",
-    group: "최대 12명",
-    supports: ["휠체어 출입", "장애인화장실", "단체 이용"],
-    requestSupports: ["쉬운 설명"],
-    verified: "3시간 전",
-    verifiedType: "api",
-    description: "높이 조절 테이블에서 흙을 만지고 나만의 접시를 만드는 공예 체험입니다.",
-    capacity: "최대 12명",
-  },
-  {
-    id: 3,
-    category: "공연",
-    title: "낮에 만나는 우리 장단",
-    venue: "예시 국악전용극장",
-    time: "금요일 14:00",
-    duration: "공연 60분",
-    distance: 31,
-    price: "장애인 6,000원",
-    priceNote: "정가의 50% 할인",
-    group: "휠체어석 4석",
-    supports: ["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"],
-    requestSupports: ["자막 제공"],
-    verified: "어제 16:10",
-    verifiedType: "api",
-    description: "익숙한 우리 장단을 가까이에서 듣고 악기를 소개받는 낮 공연입니다.",
-    capacity: "휠체어석 4석",
-  },
-  {
-    id: 4,
-    category: "교육·강좌",
-    title: "도서관 쉬운 책 이야기",
-    venue: "예시 구립도서관",
-    time: "금요일 10:30",
-    duration: "활동 50분",
-    distance: 15,
-    price: "무료",
-    priceNote: "인솔자 포함",
-    group: "5~12명 예약",
-    supports: ["휠체어 출입", "장애인화장실", "단체 이용"],
-    requestSupports: ["쉬운 설명"],
-    verified: "오늘 08:50",
-    verifiedType: "facility",
-    description: "쉬운 글과 그림으로 구성된 책을 함께 읽고 이야기를 나누는 프로그램입니다.",
-    capacity: "최대 12명",
-  },
-  {
-    id: 5,
-    category: "야외활동",
-    title: "향기와 촉감 정원 산책",
-    venue: "예시 생태문화정원",
-    time: "금요일 10:00 · 15:00",
-    duration: "산책 60분",
-    distance: 27,
-    price: "무료",
-    priceNote: "단체 해설 무료",
-    group: "우천 시 취소",
-    supports: ["휠체어 출입", "장애인화장실", "단체 이용"],
-    requestSupports: ["쉬운 설명"],
-    verified: "오늘 07:30",
-    verifiedType: "api",
-    description: "무장애 산책로를 따라 식물의 향기와 촉감을 경험하는 해설 활동입니다.",
-    capacity: "최대 15명",
-  },
-  {
-    id: 6,
-    category: "체험",
-    title: "우리 동네 사진 산책",
-    venue: "예시 미디어센터",
-    time: "금요일 11:00",
-    duration: "체험 80분",
-    distance: 24,
-    price: "1인 5,000원",
-    priceNote: "보호자 무료",
-    group: "카메라 대여 가능",
-    supports: ["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"],
-    requestSupports: ["쉬운 설명"],
-    verified: "2일 전",
-    verifiedType: "api",
-    description: "태블릿 카메라를 빌려 동네의 색과 모양을 촬영하는 소규모 활동입니다.",
-    capacity: "최대 10명",
-  },
+const initialActivities: Activity[] = [
+  { id: 1, category: "전시·박물관", title: "색과 소리로 만나는 현대미술", venue: "예시 문화예술센터", address: "서울 마포구 문화로 21", time: "금요일 11:00 · 14:00", startHours: [11, 14], weekdays: ["수", "금"], duration: "관람 70분", distance: 22, price: "장애인 무료", priceNote: "인솔자 1인 무료 · 복지카드 지참", group: "10인 이상 사전예약", maxPeople: 15, supports: ["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"], requestSupports: ["수어 통역"], verified: "오늘 09:20", verifiedType: "facility", description: "소리와 색을 함께 경험하며 작품을 감상하는 단체 해설 프로그램입니다.", capacity: "회차당 15명", phone: "02-0000-1001", operatingStatus: "정상 운영", groupBooking: "접수 가능", wheelchairStatus: "전체 경로 가능", signLanguage: "7일 전 요청 시 협의", temporaryNote: "" },
+  { id: 2, category: "체험", title: "손으로 만드는 도자기 접시", venue: "예시 생활문화공방", address: "서울 은평구 공방길 8", time: "수요일·금요일 13:00", startHours: [13], weekdays: ["수", "금"], duration: "체험 90분", distance: 18, price: "1인 8,000원", priceNote: "10인 이상 20% 할인", group: "최대 12명", maxPeople: 12, supports: ["휠체어 출입", "장애인화장실", "단체 이용"], requestSupports: ["쉬운 설명"], verified: "3시간 전", verifiedType: "api", description: "높이 조절 테이블에서 흙을 만지고 나만의 접시를 만드는 공예 체험입니다.", capacity: "최대 12명", phone: "02-0000-1002", operatingStatus: "정상 운영", groupBooking: "접수 가능", wheelchairStatus: "전체 경로 가능", signLanguage: "확인되지 않음", temporaryNote: "" },
+  { id: 3, category: "공연", title: "낮에 만나는 우리 장단", venue: "예시 국악전용극장", address: "서울 서대문구 소리길 14", time: "금요일 14:00", startHours: [14], weekdays: ["금"], duration: "공연 60분", distance: 31, price: "장애인 6,000원", priceNote: "정가의 50% 할인", group: "휠체어석 4석", maxPeople: 20, supports: ["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"], requestSupports: ["자막 제공"], verified: "어제 16:10", verifiedType: "api", description: "익숙한 우리 장단을 가까이에서 듣고 악기를 소개받는 낮 공연입니다.", capacity: "휠체어석 4석", phone: "02-0000-1003", operatingStatus: "정상 운영", groupBooking: "전화 문의 필요", wheelchairStatus: "전체 경로 가능", signLanguage: "제공하지 않음", temporaryNote: "" },
+  { id: 4, category: "교육·강좌", title: "도서관 쉬운 책 이야기", venue: "예시 구립도서관", address: "서울 은평구 책길 5", time: "목요일·금요일 10:30", startHours: [10.5], weekdays: ["목", "금"], duration: "활동 50분", distance: 15, price: "무료", priceNote: "인솔자 포함", group: "5~12명 예약", maxPeople: 12, supports: ["휠체어 출입", "장애인화장실", "단체 이용"], requestSupports: ["쉬운 설명"], verified: "오늘 08:50", verifiedType: "facility", description: "쉬운 글과 그림으로 구성된 책을 함께 읽고 이야기를 나누는 프로그램입니다.", capacity: "최대 12명", phone: "02-0000-1004", operatingStatus: "정상 운영", groupBooking: "접수 가능", wheelchairStatus: "전체 경로 가능", signLanguage: "확인되지 않음", temporaryNote: "" },
+  { id: 5, category: "야외활동", title: "향기와 촉감 정원 산책", venue: "예시 생태문화정원", address: "서울 마포구 숲길 27", time: "화요일·금요일 10:00 · 15:00", startHours: [10, 15], weekdays: ["화", "금"], duration: "산책 60분", distance: 27, price: "무료", priceNote: "단체 해설 무료", group: "우천 시 취소", maxPeople: 15, supports: ["휠체어 출입", "장애인화장실", "단체 이용"], requestSupports: ["쉬운 설명"], verified: "오늘 07:30", verifiedType: "api", description: "무장애 산책로를 따라 식물의 향기와 촉감을 경험하는 해설 활동입니다.", capacity: "최대 15명", phone: "02-0000-1005", operatingStatus: "정상 운영", groupBooking: "접수 가능", wheelchairStatus: "일부 경로 가능", signLanguage: "확인되지 않음", temporaryNote: "우천 시 프로그램 운영 여부를 출발 전에 확인해 주세요." },
+  { id: 6, category: "체험", title: "우리 동네 사진 산책", venue: "예시 미디어센터", address: "서울 마포구 미디어로 24", time: "수요일·금요일 11:00", startHours: [11], weekdays: ["수", "금"], duration: "체험 80분", distance: 24, price: "1인 5,000원", priceNote: "보호자 무료", group: "카메라 대여 가능", maxPeople: 15, supports: ["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"], requestSupports: ["쉬운 설명"], verified: "2일 전", verifiedType: "api", description: "태블릿 카메라를 빌려 동네의 색과 모양을 촬영하는 소규모 활동입니다.", capacity: "최대 15명", phone: "02-0000-1006", operatingStatus: "정상 운영", groupBooking: "접수 가능", wheelchairStatus: "전체 경로 가능", signLanguage: "확인되지 않음", temporaryNote: "" },
 ];
 
 const categories = ["전시·박물관", "공연", "체험", "교육·강좌", "야외활동"];
 const supportOptions = ["휠체어 출입", "장애인화장실", "수어 통역", "장애인 할인", "단체 이용"];
+const weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
+const regionOffsets: Record<string, number> = { 마포구: 0, 은평구: 6, 서대문구: 4 };
+const timeRanges: Record<string, [number, number]> = { "10-16": [10, 16], "09-13": [9, 13], "13-17": [13, 17] };
+const formatDate = (value: string) => { const date = new Date(`${value}T12:00:00`); return Number.isNaN(date.getTime()) ? "날짜 미정" : `${date.getMonth() + 1}월 ${date.getDate()}일 ${weekdayNames[date.getDay()]}요일`; };
+const formatClock = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(Math.round(minutes % 60)).padStart(2, "0")}`;
+const durationMinutes = (duration: string) => Number(duration.match(/\d+/)?.[0] ?? 60);
 
 export default function Home() {
+  const [activityData, setActivityData] = useState<Activity[]>(initialActivities);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["전시·박물관", "공연", "체험"]);
   const [selectedSupports, setSelectedSupports] = useState<string[]>(["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"]);
-  const [searched, setSearched] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [compareIds, setCompareIds] = useState<number[]>([1]);
-  const [planActivity, setPlanActivity] = useState<Activity | null>(null);
-  const [alertsOpen, setAlertsOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [checklist, setChecklist] = useState([true, true, false, false, false]);
+  const [region, setRegion] = useState("마포구"); const [visitDate, setVisitDate] = useState("2026-08-21"); const [timeRange, setTimeRange] = useState("10-16");
+  const [partyPreset, setPartyPreset] = useState("11"); const [users, setUsers] = useState(8); const [escorts, setEscorts] = useState(3); const [searched, setSearched] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState<number | null>(null); const [compareIds, setCompareIds] = useState<number[]>([1]); const [planActivityId, setPlanActivityId] = useState<number | null>(null);
+  const [alertsOpen, setAlertsOpen] = useState(false); const [alertsEnabled, setAlertsEnabled] = useState(true); const [alertsRead, setAlertsRead] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false); const [adminActivityId, setAdminActivityId] = useState(1); const [notice, setNotice] = useState("");
+  const [checklist, setChecklist] = useState([true, true, false, false, false]); const [hydrated, setHydrated] = useState(false);
 
-  const filtered = useMemo(() => activities.filter((activity) => {
-    const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(activity.category);
-    const supportMatch = selectedSupports.every((support) => activity.supports.includes(support) || activity.requestSupports.includes(support));
-    return categoryMatch && supportMatch;
-  }), [selectedCategories, selectedSupports]);
+  const partyTotal = partyPreset === "custom" ? Math.max(1, users) + Math.max(0, escorts) : 11;
+  const selectedWeekday = weekdayNames[new Date(`${visitDate}T12:00:00`).getDay()] ?? "";
+  const selectedActivity = activityData.find((item) => item.id === selectedActivityId) ?? null;
+  const planActivity = activityData.find((item) => item.id === planActivityId) ?? null;
+  const adminActivity = activityData.find((item) => item.id === adminActivityId) ?? activityData[0];
+  const compared = compareIds.map((id) => activityData.find((item) => item.id === id)).filter(Boolean) as Activity[];
+  const filtered = useMemo(() => { const [from, to] = timeRanges[timeRange] ?? [0, 24]; return activityData.filter((activity) => (selectedCategories.length === 0 || selectedCategories.includes(activity.category)) && selectedSupports.every((support) => activity.supports.includes(support) || activity.requestSupports.includes(support)) && activity.weekdays.includes(selectedWeekday) && activity.startHours.some((hour) => hour >= from && hour <= to) && partyTotal <= activity.maxPeople && activity.operatingStatus !== "휴관" && (!selectedSupports.includes("단체 이용") || activity.groupBooking !== "접수 마감")); }, [activityData, partyTotal, selectedCategories, selectedSupports, selectedWeekday, timeRange]);
 
-  const compared = compareIds.map((id) => activities.find((item) => item.id === id)).filter(Boolean) as Activity[];
+  useEffect(() => { try { const saved = window.localStorage.getItem("modu-nadeuri-state-v2"); if (saved) { const state = JSON.parse(saved); if (Array.isArray(state.activityData)) setActivityData(state.activityData); if (Array.isArray(state.compareIds)) setCompareIds(state.compareIds); if (typeof state.planActivityId === "number") setPlanActivityId(state.planActivityId); if (Array.isArray(state.checklist)) setChecklist(state.checklist); if (typeof state.alertsEnabled === "boolean") setAlertsEnabled(state.alertsEnabled); if (typeof state.alertsRead === "boolean") setAlertsRead(state.alertsRead); } } catch { setNotice("저장된 설정을 불러오지 못해 기본값으로 시작합니다."); } finally { setHydrated(true); } }, []);
+  useEffect(() => { if (hydrated) window.localStorage.setItem("modu-nadeuri-state-v2", JSON.stringify({ activityData, compareIds, planActivityId, checklist, alertsEnabled, alertsRead })); }, [activityData, alertsEnabled, alertsRead, checklist, compareIds, hydrated, planActivityId]);
+  useEffect(() => { const anyDialogOpen = Boolean(selectedActivity || alertsOpen || adminOpen); document.body.style.overflow = anyDialogOpen ? "hidden" : ""; const closeWithEscape = (event: KeyboardEvent) => { if (event.key === "Escape") { setSelectedActivityId(null); setAlertsOpen(false); setAdminOpen(false); } }; window.addEventListener("keydown", closeWithEscape); return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", closeWithEscape); }; }, [adminOpen, alertsOpen, selectedActivity]);
+  useEffect(() => { if (!notice) return; const timeout = window.setTimeout(() => setNotice(""), 3500); return () => window.clearTimeout(timeout); }, [notice]);
 
-  useEffect(() => {
-    const closeWithEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setSelectedActivity(null);
-        setAlertsOpen(false);
-        setAdminOpen(false);
-      }
-    };
-    window.addEventListener("keydown", closeWithEscape);
-    return () => window.removeEventListener("keydown", closeWithEscape);
-  }, []);
+  const toggle = (value: string, list: string[], setter: (values: string[]) => void) => setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
+  const distanceFor = (activity: Activity) => Math.max(8, activity.distance + (regionOffsets[region] ?? 0));
+  const runSearch = (event: FormEvent) => { event.preventDefault(); setSearched(true); setNotice(`${filtered.length}개의 활동을 찾았습니다.`); window.setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 50); };
+  const resetSearch = () => { setRegion("마포구"); setVisitDate("2026-08-21"); setTimeRange("10-16"); setPartyPreset("11"); setUsers(8); setEscorts(3); setSelectedCategories(["전시·박물관", "공연", "체험"]); setSelectedSupports(["휠체어 출입", "장애인화장실", "장애인 할인", "단체 이용"]); setSearched(false); setNotice("검색 조건을 기본값으로 되돌렸습니다."); };
+  const toggleCompare = (id: number) => { if (compareIds.includes(id)) { setCompareIds(compareIds.filter((item) => item !== id)); setNotice("비교 후보에서 제외했습니다."); return; } if (compareIds.length >= 3) { setNotice("후보는 최대 3개까지 비교할 수 있습니다."); return; } setCompareIds([...compareIds, id]); setNotice("비교 후보에 담았습니다."); };
+  const addPlan = (activity: Activity) => { setPlanActivityId(activity.id); setSelectedActivityId(null); setChecklist([false, false, false, false, false]); setNotice(`${activity.title}을 활동계획에 담았습니다.`); window.setTimeout(() => document.getElementById("plan")?.scrollIntoView({ behavior: "smooth" }), 50); };
+  const sharePlan = async () => { if (!planActivity) return; const text = `${formatDate(visitDate)} 모두나들이 계획\n${planActivity.title}\n${planActivity.venue}\n${planActivity.time}\n${planActivity.phone}`; try { if (navigator.share) await navigator.share({ title: "모두나들이 활동계획", text }); else if (navigator.clipboard) { await navigator.clipboard.writeText(text); setNotice("활동계획 내용을 복사했습니다."); } } catch (error) { if (error instanceof DOMException && error.name === "AbortError") return; setNotice("공유하지 못했습니다. 다시 시도해 주세요."); } };
+  const saveFacility = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); setActivityData((items) => items.map((activity) => { if (activity.id !== adminActivityId) return activity; const wheelchairStatus = String(form.get("wheelchair")) as Activity["wheelchairStatus"]; const signLanguage = String(form.get("signLanguage")) as Activity["signLanguage"]; const supports = new Set(activity.supports); const requestSupports = new Set(activity.requestSupports); if (wheelchairStatus === "현재 불가") supports.delete("휠체어 출입"); else supports.add("휠체어 출입"); supports.delete("수어 통역"); requestSupports.delete("수어 통역"); if (signLanguage === "지정 회차 제공") supports.add("수어 통역"); if (signLanguage === "7일 전 요청 시 협의") requestSupports.add("수어 통역"); return { ...activity, operatingStatus: String(form.get("status")) as Activity["operatingStatus"], groupBooking: String(form.get("groupBooking")) as Activity["groupBooking"], wheelchairStatus, signLanguage, priceNote: String(form.get("discount")), temporaryNote: String(form.get("temporaryNote")), supports: [...supports], requestSupports: [...requestSupports], verified: "방금 전", verifiedType: "facility" }; })); setNotice(`${adminActivity.venue}의 운영·지원 정보를 저장했습니다.`); setAdminOpen(false); };
+  const resetFacilityData = () => { setActivityData(initialActivities); setAdminActivityId(1); setNotice("시설 정보를 예시 기본값으로 복원했습니다."); };
 
-  const toggle = (value: string, list: string[], setter: (values: string[]) => void) => {
-    setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
-  };
+  const planStart = planActivity ? (planActivity.startHours.find((hour) => hour >= (timeRanges[timeRange]?.[0] ?? 0)) ?? planActivity.startHours[0]) * 60 : 660;
+  const planItems = planActivity ? [[formatClock(planStart - distanceFor(planActivity) - 15), "시설 출발", `승합차 · 총 ${partyTotal}명`], [formatClock(planStart - 15), "도착 및 이동 준비", planActivity.wheelchairStatus], [formatClock(planStart), planActivity.title, planActivity.duration], [formatClock(planStart + durationMinutes(planActivity.duration) + 20), "시설 복귀", `예상 이동 ${distanceFor(planActivity)}분`]] : [];
+  const alertCount = alertsEnabled && !alertsRead ? 2 : 0;
 
-  const runSearch = (event: FormEvent) => {
-    event.preventDefault();
-    setSearched(true);
-    setNotice(`${filtered.length}개의 활동을 찾았습니다.`);
-    window.setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 50);
-  };
-
-  const toggleCompare = (id: number) => {
-    if (compareIds.includes(id)) {
-      setCompareIds(compareIds.filter((item) => item !== id));
-      return;
-    }
-    if (compareIds.length >= 3) {
-      setNotice("후보는 최대 3개까지 비교할 수 있습니다.");
-      return;
-    }
-    setCompareIds([...compareIds, id]);
-  };
-
-  const addPlan = (activity: Activity) => {
-    setPlanActivity(activity);
-    setSelectedActivity(null);
-    setNotice(`${activity.title}을 활동계획에 담았습니다.`);
-    window.setTimeout(() => document.getElementById("plan")?.scrollIntoView({ behavior: "smooth" }), 50);
-  };
-
-  const sharePlan = async () => {
-    const text = planActivity ? `8월 21일 모두나들이 계획: ${planActivity.title}` : "모두나들이 활동계획";
-    if (navigator.share) await navigator.share({ title: "모두나들이 활동계획", text });
-    else {
-      await navigator.clipboard.writeText(text);
-      setNotice("활동계획 내용을 복사했습니다.");
-    }
-  };
-
-  return (
-    <>
-      <a className="skip-link" href="#main">본문으로 바로가기</a>
-      <div className="demo-banner"><strong>서비스 검증용 홈페이지</strong><span>현재 활동 정보는 예시이며, 운영 전 공공 API와 시설 확인 정보가 연결됩니다.</span></div>
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="모두나들이 홈">
-          <span className="brand-mark" aria-hidden="true">모</span>
-          <span><strong>모두나들이</strong><small>모두에게 맞는 문화활동 찾기</small></span>
-        </a>
-        <nav aria-label="주요 메뉴">
-          <a href="#search">활동 찾기</a>
-          <a href="#compare">후보 비교 <b>{compareIds.length}</b></a>
-          <a href="#plan">활동계획</a>
-          <button type="button" onClick={() => setAlertsOpen(true)}>변경 알림 <b>2</b></button>
-        </nav>
-        <button className="admin-button" type="button" onClick={() => setAdminOpen(true)}>시설 정보 수정</button>
-      </header>
-
-      <main id="main">
-        <section className="hero" id="top">
-          <div className="hero-copy">
-            <div className="eyebrow">평일 낮 문화활동 찾기</div>
-            <h1>오늘 갈 수 있는 곳,<br /><em>확실한 정보</em>로 찾아보세요.</h1>
-            <p>지역과 시간, 필요한 지원을 선택하면 단체로 이용할 수 있는 문화활동만 모아서 보여드려요.</p>
-            <div className="hero-proof"><span>✓ 마지막 확인 시각 표시</span><span>✓ 시설·프로그램 접근성 분리</span><span>✓ 할인·예약 조건 비교</span></div>
-          </div>
-          <div className="hero-visual" aria-label="활동 정보를 확인하는 예시">
-            <div className="visual-date"><span>8월</span><strong>21</strong><small>금요일</small></div>
-            <div className="visual-line"></div>
-            <div className="visual-card"><span>11:00</span><strong>현대미술 전시 해설</strong><small>휠체어 이동 경로 확인됨</small></div>
-            <div className="visual-card accent"><span>14:00</span><strong>우리 장단 낮 공연</strong><small>자막 제공 · 장애인 50% 할인</small></div>
-          </div>
-        </section>
-
-        <form className="search-panel" id="search" onSubmit={runSearch} aria-labelledby="search-title">
-          <div className="panel-heading"><div><span className="section-label">1분이면 충분해요</span><h2 id="search-title">나들이 조건을 알려주세요</h2></div><span className="result-estimate">예상 결과 {filtered.length}개</span></div>
-          <div className="search-grid">
-            <label>출발 지역<select defaultValue="마포구"><option value="마포구">서울 마포구</option><option value="은평구">서울 은평구</option><option value="서대문구">서울 서대문구</option></select></label>
-            <label>방문 날짜<input type="date" defaultValue="2026-08-21" /></label>
-            <label>가능 시간<select defaultValue="10-16"><option value="10-16">10:00~16:00</option><option value="09-13">09:00~13:00</option><option value="13-17">13:00~17:00</option></select></label>
-            <label>참여 인원<select defaultValue="11"><option value="11">이용자 8명 · 인솔자 3명</option><option value="custom">직접 입력</option></select></label>
-          </div>
-          <fieldset><legend>활동 종류</legend><div className="choice-row">{categories.map((category) => <label key={category}><input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => toggle(category, selectedCategories, setSelectedCategories)} /> {category}</label>)}</div></fieldset>
-          <fieldset><legend>꼭 필요한 지원</legend><div className="choice-row">{supportOptions.map((support) => <label key={support}><input type="checkbox" checked={selectedSupports.includes(support)} onChange={() => toggle(support, selectedSupports, setSelectedSupports)} /> {support}</label>)}</div></fieldset>
-          <div className="search-actions"><button className="primary-action" type="submit">조건에 맞는 활동 보기 <span aria-hidden="true">→</span></button><p>정보가 없으면 ‘이용 불가’가 아닌 ‘확인 필요’로 표시합니다.</p></div>
-        </form>
-
-        <section className="category-strip" aria-label="빠른 활동 분류">
-          <p>무엇을 해볼까요?</p>
-          {categories.map((category, index) => <button type="button" key={category} onClick={() => { setSelectedCategories([category]); setSearched(true); window.setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 50); }}><span aria-hidden="true">{["▦", "♪", "✦", "▤", "♧"][index]}</span>{category}</button>)}
-        </section>
-
-        <section className="results-section" id="results" aria-labelledby="results-title">
-          <div className="section-heading"><div><span className="section-label">{searched ? "검색 결과" : "오늘 확인된 추천"}</span><h2 id="results-title">조건에 맞는 활동 {filtered.length}개</h2><p>서울 마포구 출발 · 8월 21일 금요일 · 10:00~16:00</p></div><div className="legend"><span><i className="dot verified"></i>시설 확인</span><span><i className="dot api"></i>API 갱신</span></div></div>
-          <div className="active-filters" aria-label="적용된 필터">{selectedSupports.map((support) => <button type="button" key={support} onClick={() => toggle(support, selectedSupports, setSelectedSupports)}>{support} <span aria-hidden="true">×</span></button>)}</div>
-          <div className="results-grid">
-            {filtered.map((activity) => (
-              <article className="activity-card" key={activity.id}>
-                <div className="activity-top"><span className="activity-type">{activity.category}</span><span className={`trust ${activity.verifiedType}`}><i className="dot"></i>{activity.verifiedType === "facility" ? "시설 직접 확인" : "공공 API"}</span></div>
-                <div className="activity-content">
-                  <div>
-                    <h3>{activity.title}</h3><p className="venue">{activity.venue}</p><p className="schedule">{activity.time} <span>·</span> {activity.duration} <span>·</span> 차량 약 {activity.distance}분</p>
-                    <div className="tag-row">{activity.supports.slice(0, 3).map((support) => <span key={support}>✓ {support}</span>)}{activity.requestSupports.map((support) => <span className="request" key={support}>{support} 사전 요청</span>)}</div>
-                  </div>
-                  <div className="activity-price"><strong>{activity.price}</strong><small>{activity.priceNote}</small><button className="detail-button" type="button" onClick={() => setSelectedActivity(activity)}>상세 보기</button></div>
-                </div>
-                <footer><span>확인: {activity.verified}</span><span>{activity.group}</span><label><input type="checkbox" checked={compareIds.includes(activity.id)} onChange={() => toggleCompare(activity.id)} /> 비교에 담기</label></footer>
-              </article>
-            ))}
-            {filtered.length === 0 && <div className="empty-state"><strong>모든 조건에 맞는 활동이 아직 없어요.</strong><p>‘수어 통역’처럼 사전 협의가 가능한 조건을 제외하거나 지역 범위를 넓혀보세요.</p><button type="button" onClick={() => setSelectedSupports(["휠체어 출입", "장애인화장실", "단체 이용"])}>기본 조건으로 다시 보기</button></div>}
-          </div>
-        </section>
-
-        <section className="compare-section" id="compare" aria-labelledby="compare-title">
-          <div className="section-heading"><div><span className="section-label">후보 비교</span><h2 id="compare-title">어디가 가장 잘 맞을까요?</h2><p>최대 3개의 활동을 비용·이동·지원 조건으로 비교할 수 있어요.</p></div><span className="compare-count">{compared.length}/3 선택</span></div>
-          {compared.length ? <div className="comparison-wrap"><table><thead><tr><th>확인 항목</th>{compared.map((activity) => <th key={activity.id}>{activity.title}<button type="button" aria-label={`${activity.title} 비교에서 제외`} onClick={() => toggleCompare(activity.id)}>×</button></th>)}</tr></thead><tbody><tr><th>이용 시간</th>{compared.map((activity) => <td key={activity.id}>{activity.time}</td>)}</tr><tr><th>이동시간</th>{compared.map((activity) => <td key={activity.id}>차량 약 {activity.distance}분</td>)}</tr><tr><th>이용요금</th>{compared.map((activity) => <td key={activity.id}><strong>{activity.price}</strong><small>{activity.priceNote}</small></td>)}</tr><tr><th>지원 정보</th>{compared.map((activity) => <td key={activity.id}>{activity.supports.slice(0, 3).join(" · ")}</td>)}</tr><tr><th>최종 확인</th>{compared.map((activity) => <td key={activity.id}>{activity.verified}</td>)}</tr><tr><th>선택</th>{compared.map((activity) => <td key={activity.id}><button className="table-action" type="button" onClick={() => addPlan(activity)}>이 활동으로 계획</button></td>)}</tr></tbody></table></div> : <div className="empty-state"><strong>비교할 활동을 담아주세요.</strong><p>검색 결과 카드 아래의 ‘비교에 담기’를 선택하면 여기에 표시됩니다.</p></div>}
-        </section>
-
-        <section className="plan-section" id="plan" aria-labelledby="plan-title">
-          <div className="section-heading"><div><span className="section-label">활동계획표</span><h2 id="plan-title">방문 준비를 한 번에</h2><p>일정과 확인사항을 동료에게 공유하거나 인쇄할 수 있어요.</p></div>{planActivity && <div className="plan-actions"><button type="button" onClick={sharePlan}>계획 공유</button><button type="button" onClick={() => window.print()}>인쇄</button></div>}</div>
-          {planActivity ? <div className="plan-grid"><div className="plan-timeline"><h3>8월 21일 금요일</h3>{[["10:20", "시설 출발", "승합차 · 이용자 8명, 인솔자 3명"], ["10:45", "도착 및 화장실 이용", "장애인 승하차 구역 이용"], ["11:00", planActivity.title, planActivity.duration], ["12:20", "점심 및 휴식", "근처 무장애 식당 확인 필요"], ["14:00", "시설 복귀", "예상 이동 22분"]].map(([time, title, note], index) => <div className="timeline-item" key={time}><time>{time}</time><i aria-hidden="true"></i><div><strong>{title}</strong><small>{note}</small></div>{index === 2 && <span className="current-label">주요 활동</span>}</div>)}</div><div className="plan-check"><h3>방문 전 확인</h3>{["단체 예약 완료", "휠체어 2대 이동 경로 확인", "복지카드 준비", "승합차 주차 위치 확인", "출발 전 운영 상태 재확인"].map((item, index) => <label key={item}><input type="checkbox" checked={checklist[index]} onChange={() => setChecklist(checklist.map((checked, itemIndex) => itemIndex === index ? !checked : checked))} /><span>{item}</span></label>)}<div className="contact-box"><span>예약·문의</span><strong>{planActivity.venue}</strong><small>02-0000-0000 · 단체예약 담당</small></div><button className="primary-action full" type="button" onClick={() => setAlertsOpen(true)}>방문 전 변경 알림 받기</button></div></div> : <div className="plan-empty"><span aria-hidden="true">＋</span><strong>아직 선택한 활동이 없어요</strong><p>활동 상세 또는 후보 비교에서 ‘활동계획에 담기’를 선택해 주세요.</p><a href="#results">추천 활동 보기</a></div>}
-        </section>
-
-        <section className="how-section" id="guide" aria-labelledby="how-title">
-          <div className="how-intro"><span className="section-label">안심할 수 있는 정보</span><h2 id="how-title">‘가능’보다<br />‘확인됨’을 보여드려요.</h2><p>정보 없음과 이용 불가를 구분하고, 어디에서 언제 확인한 정보인지 함께 표시합니다.</p></div>
-          <ol><li><span>01</span><strong>여러 출처를 한곳에</strong><p>문화·공연·무장애 관련 공공 정보를 모아 중복을 정리합니다.</p></li><li><span>02</span><strong>시설에서 직접 수정</strong><p>할인, 수어 통역, 시설 고장 같은 변경사항을 담당자가 알려줍니다.</p></li><li><span>03</span><strong>방문 전에 다시 확인</strong><p>저장한 활동의 운영·예약 상태가 바뀌면 바로 알려드립니다.</p></li></ol>
-        </section>
-      </main>
-
-      <footer className="site-footer"><div><a className="brand footer-brand" href="#top"><span className="brand-mark" aria-hidden="true">모</span><span><strong>모두나들이</strong><small>모두에게 맞는 문화활동 찾기</small></span></a><p>모두의 문화활동 선택이 더 다양하고 안전해지도록 돕습니다.</p></div><div><strong>정보 안내</strong><a href="#guide">정보 확인 기준</a><button type="button" onClick={() => setAdminOpen(true)}>문화시설 정보 수정</button></div><div><strong>접근성</strong><span>키보드 이용 가능</span><span>스크린리더 레이블 제공</span></div></footer>
-
-      <div className="live-region" aria-live="polite">{notice}</div>
-
-      {selectedActivity && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedActivity(null); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><button className="modal-close" type="button" aria-label="상세정보 닫기" onClick={() => setSelectedActivity(null)}>×</button><span className="section-label">{selectedActivity.category} · 예시 정보</span><h2 id="detail-title">{selectedActivity.title}</h2><p className="modal-lead">{selectedActivity.venue} · {selectedActivity.time}</p><div className="detail-summary"><div><span>예상 비용</span><strong>{selectedActivity.price}</strong></div><div><span>이동 예상</span><strong>차량 {selectedActivity.distance}분</strong></div><div><span>단체 조건</span><strong>{selectedActivity.capacity}</strong></div></div><p className="detail-description">{selectedActivity.description}</p><h3>이용 조건과 지원</h3><dl className="detail-list"><div><dt>가격·할인</dt><dd>{selectedActivity.price} · {selectedActivity.priceNote}</dd></div><div><dt>시설 접근</dt><dd>{selectedActivity.supports.join(" · ")}</dd></div><div><dt>사전 요청</dt><dd>{selectedActivity.requestSupports.length ? selectedActivity.requestSupports.join(" · ") : "별도 요청 없음"}</dd></div><div><dt>정보 확인</dt><dd>{selectedActivity.verifiedType === "facility" ? "시설 담당자 직접 확인" : "공공 API 갱신"} · {selectedActivity.verified}</dd></div></dl><div className="modal-actions"><button className="primary-action" type="button" onClick={() => addPlan(selectedActivity)}>활동계획에 담기</button><button type="button" onClick={() => toggleCompare(selectedActivity.id)}>{compareIds.includes(selectedActivity.id) ? "비교에서 빼기" : "비교에 담기"}</button><a href="tel:0200000000">전화로 확인</a></div></section></div>}
-
-      {alertsOpen && <div className="side-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAlertsOpen(false); }}><aside className="side-panel" role="dialog" aria-modal="true" aria-labelledby="alerts-title"><button className="modal-close" type="button" aria-label="알림 닫기" onClick={() => setAlertsOpen(false)}>×</button><span className="section-label">저장 활동 알림</span><h2 id="alerts-title">변경사항을 놓치지 마세요</h2><label className="alert-switch"><input type="checkbox" defaultChecked /><span>방문 전날 다시 확인해서 알려주기</span></label><div className="alert-list"><article><i aria-hidden="true">✓</i><div><strong>시설에서 운영 상태를 확인했습니다</strong><p>8월 21일 전시 해설과 휠체어 이동 경로가 정상 운영됩니다.</p><small>오늘 09:20</small></div></article><article><i aria-hidden="true">⏱</i><div><strong>방문 전 재확인이 예정되어 있습니다</strong><p>운영·예약·승강기 상태를 다시 확인해 알려드릴게요.</p><small>8월 20일 예정</small></div></article></div></aside></div>}
-
-      {adminOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAdminOpen(false); }}><form className="modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-title" onSubmit={(event) => { event.preventDefault(); setNotice("시설 운영·지원 정보를 저장했습니다."); setAdminOpen(false); }}><button className="modal-close" type="button" aria-label="시설 정보수정 닫기" onClick={() => setAdminOpen(false)}>×</button><span className="section-label">문화시설 정보관리</span><h2 id="admin-title">오늘의 운영·지원 정보</h2><p className="admin-note">임시 변경사항은 종료일이 지나면 이전 상태로 돌아갑니다.</p><div className="admin-grid"><label>오늘 운영 상태<select><option>정상 운영</option><option>일부 운영</option><option>휴관</option></select></label><label>단체 접수<select><option>접수 가능</option><option>전화 문의 필요</option><option>접수 마감</option></select></label><label>휠체어 이동<select><option>전체 경로 가능</option><option>일부 경로 가능</option><option>현재 불가</option></select></label><label>수어 통역<select><option>7일 전 요청 시 협의</option><option>지정 회차 제공</option><option>제공하지 않음</option><option>확인되지 않음</option></select></label><label className="wide">할인 안내<input defaultValue="장애인 무료, 인솔자 1인 무료 · 복지카드 지참" /></label><label className="wide">임시 안내<textarea rows={3} placeholder="시설 점검, 접근 경로 변경 등을 입력하세요." /></label></div><button className="primary-action full" type="submit">운영·지원 정보 저장</button></form></div>}
-    </>
-  );
+  return <>
+    <a className="skip-link" href="#main">본문으로 바로가기</a>
+    <div className="demo-banner"><strong>서비스 검증용 홈페이지</strong><span>현재 활동 정보는 예시이며, 수정·선택 내용은 이 기기에 저장됩니다.</span></div>
+    <header className="site-header"><a className="brand" href="#top" aria-label="모두나들이 홈"><span className="brand-mark" aria-hidden="true">모</span><span><strong>모두나들이</strong><small>모두에게 맞는 문화활동 찾기</small></span></a><nav aria-label="주요 메뉴"><a href="#search">활동 찾기</a><a href="#compare">후보 비교 <b>{compareIds.length}</b></a><a href="#plan">활동계획</a><button type="button" onClick={() => setAlertsOpen(true)}>변경 알림 {alertCount > 0 && <b>{alertCount}</b>}</button></nav><button className="admin-button" type="button" onClick={() => setAdminOpen(true)}>시설 정보 수정</button></header>
+    <main id="main">
+      <section className="hero" id="top"><div className="hero-copy"><div className="eyebrow">평일 낮 문화활동 찾기</div><h1>오늘 갈 수 있는 곳,<br /><em>확실한 정보</em>로 찾아보세요.</h1><p>지역과 시간, 필요한 지원을 선택하면 단체로 이용할 수 있는 문화활동만 모아서 보여드려요.</p><div className="hero-proof"><span>✓ 마지막 확인 시각 표시</span><span>✓ 시설·프로그램 접근성 분리</span><span>✓ 할인·예약 조건 비교</span></div></div><div className="hero-visual" aria-label="활동 정보를 확인하는 예시"><div className="visual-date"><span>8월</span><strong>21</strong><small>금요일</small></div><div className="visual-line"></div><div className="visual-card"><span>11:00</span><strong>현대미술 전시 해설</strong><small>휠체어 이동 경로 확인됨</small></div><div className="visual-card accent"><span>14:00</span><strong>우리 장단 낮 공연</strong><small>자막 제공 · 장애인 50% 할인</small></div></div></section>
+      <form className="search-panel" id="search" onSubmit={runSearch} aria-labelledby="search-title"><div className="panel-heading"><div><span className="section-label">1분이면 충분해요</span><h2 id="search-title">나들이 조건을 알려주세요</h2></div><span className="result-estimate">예상 결과 {filtered.length}개</span></div><div className="search-grid"><label>출발 지역<select value={region} onChange={(event) => setRegion(event.target.value)}><option value="마포구">서울 마포구</option><option value="은평구">서울 은평구</option><option value="서대문구">서울 서대문구</option></select></label><label>방문 날짜<input type="date" value={visitDate} onChange={(event) => setVisitDate(event.target.value)} /></label><label>가능 시간<select value={timeRange} onChange={(event) => setTimeRange(event.target.value)}><option value="10-16">10:00~16:00</option><option value="09-13">09:00~13:00</option><option value="13-17">13:00~17:00</option></select></label><label>참여 인원<select value={partyPreset} onChange={(event) => setPartyPreset(event.target.value)}><option value="11">이용자 8명 · 인솔자 3명</option><option value="custom">직접 입력</option></select></label></div>{partyPreset === "custom" && <div className="custom-party" aria-label="참여 인원 직접 입력"><label>이용자 수<input type="number" min="1" max="50" value={users} onChange={(event) => setUsers(Number(event.target.value))} /></label><label>인솔자 수<input type="number" min="0" max="20" value={escorts} onChange={(event) => setEscorts(Number(event.target.value))} /></label><strong>총 {partyTotal}명</strong></div>}<fieldset><legend>활동 종류</legend><div className="choice-row">{categories.map((category) => <label key={category}><input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => toggle(category, selectedCategories, setSelectedCategories)} /> {category}</label>)}</div></fieldset><fieldset><legend>꼭 필요한 지원</legend><div className="choice-row">{supportOptions.map((support) => <label key={support}><input type="checkbox" checked={selectedSupports.includes(support)} onChange={() => toggle(support, selectedSupports, setSelectedSupports)} /> {support}</label>)}</div></fieldset><div className="search-actions"><button className="primary-action" type="submit">조건에 맞는 활동 보기 <span aria-hidden="true">→</span></button><button className="secondary-action" type="button" onClick={resetSearch}>조건 초기화</button><p>휴관·접수 마감·인원 초과 활동은 결과에서 제외됩니다.</p></div></form>
+      <section className="category-strip" aria-label="빠른 활동 분류"><p>무엇을 해볼까요?</p>{categories.map((category, index) => <button type="button" key={category} className={selectedCategories.length === 1 && selectedCategories[0] === category ? "active" : ""} aria-pressed={selectedCategories.length === 1 && selectedCategories[0] === category} onClick={() => { setSelectedCategories([category]); setSearched(true); setNotice(`${category} 활동만 모아봅니다.`); window.setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 50); }}><span aria-hidden="true">{["▦", "♪", "✦", "▤", "♧"][index]}</span>{category}</button>)}</section>
+      <section className="results-section" id="results" aria-labelledby="results-title"><div className="section-heading"><div><span className="section-label">{searched ? "검색 결과" : "오늘 확인된 추천"}</span><h2 id="results-title">조건에 맞는 활동 {filtered.length}개</h2><p>서울 {region} 출발 · {formatDate(visitDate)} · {timeRange === "10-16" ? "10:00~16:00" : timeRange === "09-13" ? "09:00~13:00" : "13:00~17:00"} · 총 {partyTotal}명</p></div><div className="legend"><span><i className="dot verified"></i>시설 확인</span><span><i className="dot api"></i>API 갱신</span></div></div><div className="active-filters" aria-label="적용된 필터">{selectedCategories.map((category) => <button type="button" key={category} onClick={() => toggle(category, selectedCategories, setSelectedCategories)}>{category} <span aria-hidden="true">×</span></button>)}{selectedSupports.map((support) => <button type="button" key={support} onClick={() => toggle(support, selectedSupports, setSelectedSupports)}>{support} <span aria-hidden="true">×</span></button>)}</div><div className="results-grid">{filtered.map((activity) => <article className="activity-card" key={activity.id}><div className="activity-top"><span className="activity-type">{activity.category}</span><span className={`trust ${activity.verifiedType}`}><i className="dot"></i>{activity.verifiedType === "facility" ? "시설 직접 확인" : "공공 API"}</span></div><div className="activity-content"><div><div className="status-row"><span>{activity.operatingStatus}</span><span>{activity.groupBooking}</span></div><h3>{activity.title}</h3><p className="venue">{activity.venue} · {activity.address}</p><p className="schedule">{activity.time} <span>·</span> {activity.duration} <span>·</span> 차량 약 {distanceFor(activity)}분</p><div className="tag-row">{activity.supports.slice(0, 4).map((support) => <span key={support}>✓ {support}</span>)}{activity.requestSupports.map((support) => <span className="request" key={support}>{support} 사전 요청</span>)}</div>{activity.temporaryNote && <p className="activity-note">안내: {activity.temporaryNote}</p>}</div><div className="activity-price"><div><strong>{activity.price}</strong><small>{activity.priceNote}</small></div><button className="detail-button" type="button" onClick={() => setSelectedActivityId(activity.id)}>상세 보기</button></div></div><footer><span>확인: {activity.verified}</span><span>{activity.group}</span><label><input type="checkbox" checked={compareIds.includes(activity.id)} onChange={() => toggleCompare(activity.id)} /> 비교에 담기</label></footer></article>)}{filtered.length === 0 && <div className="empty-state"><strong>모든 조건에 맞는 활동이 아직 없어요.</strong><p>날짜·시간·참여 인원 또는 필수 지원 조건을 조정해 보세요.</p><button type="button" onClick={resetSearch}>기본 조건으로 다시 보기</button></div>}</div></section>
+      <section className="compare-section" id="compare" aria-labelledby="compare-title"><div className="section-heading"><div><span className="section-label">후보 비교</span><h2 id="compare-title">어디가 가장 잘 맞을까요?</h2><p>최대 3개의 활동을 비용·이동·지원 조건으로 비교할 수 있어요.</p></div><span className="compare-count">{compared.length}/3 선택</span></div>{compared.length ? <div className="comparison-wrap"><table><thead><tr><th>확인 항목</th>{compared.map((activity) => <th key={activity.id}>{activity.title}<button type="button" aria-label={`${activity.title} 비교에서 제외`} onClick={() => toggleCompare(activity.id)}>×</button></th>)}</tr></thead><tbody><tr><th>이용 시간</th>{compared.map((activity) => <td key={activity.id}>{activity.time}</td>)}</tr><tr><th>이동시간</th>{compared.map((activity) => <td key={activity.id}>차량 약 {distanceFor(activity)}분</td>)}</tr><tr><th>이용요금</th>{compared.map((activity) => <td key={activity.id}><strong>{activity.price}</strong><small>{activity.priceNote}</small></td>)}</tr><tr><th>지원 정보</th>{compared.map((activity) => <td key={activity.id}>{activity.supports.join(" · ")}</td>)}</tr><tr><th>운영 상태</th>{compared.map((activity) => <td key={activity.id}>{activity.operatingStatus} · {activity.groupBooking}</td>)}</tr><tr><th>최종 확인</th>{compared.map((activity) => <td key={activity.id}>{activity.verified}</td>)}</tr><tr><th>선택</th>{compared.map((activity) => <td key={activity.id}><button className="table-action" type="button" onClick={() => addPlan(activity)}>이 활동으로 계획</button></td>)}</tr></tbody></table></div> : <div className="empty-state"><strong>비교할 활동을 담아주세요.</strong><p>검색 결과 카드 아래의 ‘비교에 담기’를 선택하면 여기에 표시됩니다.</p></div>}</section>
+      <section className="plan-section" id="plan" aria-labelledby="plan-title"><div className="section-heading"><div><span className="section-label">활동계획표</span><h2 id="plan-title">방문 준비를 한 번에</h2><p>일정과 확인사항을 동료에게 공유하거나 인쇄할 수 있어요.</p></div>{planActivity && <div className="plan-actions"><button type="button" onClick={sharePlan}>계획 공유</button><button type="button" onClick={() => window.print()}>인쇄</button><button type="button" onClick={() => { setPlanActivityId(null); setNotice("활동계획을 비웠습니다."); }}>계획 비우기</button></div>}</div>{planActivity ? <div className="plan-grid"><div className="plan-timeline"><h3>{formatDate(visitDate)}</h3>{planItems.map(([time, title, note], index) => <div className="timeline-item" key={`${time}-${title}`}><time>{time}</time><i aria-hidden="true"></i><div><strong>{title}</strong><small>{note}</small></div>{index === 2 && <span className="current-label">주요 활동</span>}</div>)}</div><div className="plan-check"><h3>방문 전 확인</h3>{["단체 예약 완료", "휠체어 이동 경로 확인", "복지카드 준비", "승합차 주차 위치 확인", "출발 전 운영 상태 재확인"].map((item, index) => <label key={item}><input type="checkbox" checked={checklist[index]} onChange={() => setChecklist(checklist.map((checked, itemIndex) => itemIndex === index ? !checked : checked))} /><span>{item}</span></label>)}<div className="contact-box"><span>예약·문의</span><strong>{planActivity.venue}</strong><small>{planActivity.phone} · {planActivity.groupBooking}</small></div><button className="primary-action full" type="button" onClick={() => setAlertsOpen(true)}>방문 전 변경 알림 설정</button></div></div> : <div className="plan-empty"><span aria-hidden="true">＋</span><strong>아직 선택한 활동이 없어요</strong><p>활동 상세 또는 후보 비교에서 ‘활동계획에 담기’를 선택해 주세요.</p><a href="#results">추천 활동 보기</a></div>}</section>
+      <section className="how-section" id="guide" aria-labelledby="how-title"><div className="how-intro"><span className="section-label">안심할 수 있는 정보</span><h2 id="how-title">‘가능’보다<br />‘확인됨’을 보여드려요.</h2><p>정보 없음과 이용 불가를 구분하고, 어디에서 언제 확인한 정보인지 함께 표시합니다.</p></div><ol><li><span>01</span><strong>여러 출처를 한곳에</strong><p>문화·공연·무장애 관련 공공 정보를 모아 중복을 정리합니다.</p></li><li><span>02</span><strong>시설에서 직접 수정</strong><p>할인, 수어 통역, 시설 고장 같은 변경사항을 담당자가 알려줍니다.</p></li><li><span>03</span><strong>방문 전에 다시 확인</strong><p>저장한 활동의 운영·예약 상태가 바뀌면 바로 알려드립니다.</p></li></ol></section>
+    </main>
+    <footer className="site-footer"><div><a className="brand footer-brand" href="#top"><span className="brand-mark" aria-hidden="true">모</span><span><strong>모두나들이</strong><small>모두에게 맞는 문화활동 찾기</small></span></a><p>모두의 문화활동 선택이 더 다양하고 안전해지도록 돕습니다.</p></div><div><strong>정보 안내</strong><a href="#guide">정보 확인 기준</a><button type="button" onClick={() => setAdminOpen(true)}>문화시설 정보 수정</button></div><div><strong>접근성</strong><span>키보드 이용 가능</span><span>스크린리더 레이블 제공</span></div></footer>
+    <div className="live-region" aria-live="polite">{notice}</div>{notice && <div className="toast" role="status"><span>{notice}</span><button type="button" aria-label="상태 메시지 닫기" onClick={() => setNotice("")}>×</button></div>}
+    {selectedActivity && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedActivityId(null); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><button className="modal-close" type="button" aria-label="상세정보 닫기" onClick={() => setSelectedActivityId(null)}>×</button><span className="section-label">{selectedActivity.category} · {selectedActivity.operatingStatus}</span><h2 id="detail-title">{selectedActivity.title}</h2><p className="modal-lead">{selectedActivity.venue} · {selectedActivity.time}</p><div className="detail-summary"><div><span>예상 비용</span><strong>{selectedActivity.price}</strong></div><div><span>이동 예상</span><strong>차량 {distanceFor(selectedActivity)}분</strong></div><div><span>단체 조건</span><strong>{selectedActivity.capacity}</strong></div></div><p className="detail-description">{selectedActivity.description}</p>{selectedActivity.temporaryNote && <p className="admin-note">{selectedActivity.temporaryNote}</p>}<h3>이용 조건과 지원</h3><dl className="detail-list"><div><dt>주소</dt><dd>{selectedActivity.address}</dd></div><div><dt>가격·할인</dt><dd>{selectedActivity.price} · {selectedActivity.priceNote}</dd></div><div><dt>시설 접근</dt><dd>{selectedActivity.supports.join(" · ")}</dd></div><div><dt>수어 통역</dt><dd>{selectedActivity.signLanguage}</dd></div><div><dt>단체 접수</dt><dd>{selectedActivity.groupBooking}</dd></div><div><dt>정보 확인</dt><dd>{selectedActivity.verifiedType === "facility" ? "시설 담당자 직접 확인" : "공공 API 갱신"} · {selectedActivity.verified}</dd></div></dl><div className="modal-actions"><button className="primary-action" type="button" onClick={() => addPlan(selectedActivity)}>활동계획에 담기</button><button type="button" onClick={() => toggleCompare(selectedActivity.id)}>{compareIds.includes(selectedActivity.id) ? "비교에서 빼기" : "비교에 담기"}</button><a href={`tel:${selectedActivity.phone.replaceAll("-", "")}`}>전화로 확인</a></div></section></div>}
+    {alertsOpen && <div className="side-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAlertsOpen(false); }}><aside className="side-panel" role="dialog" aria-modal="true" aria-labelledby="alerts-title"><button className="modal-close" type="button" aria-label="알림 닫기" onClick={() => setAlertsOpen(false)}>×</button><span className="section-label">저장 활동 알림</span><h2 id="alerts-title">변경사항을 놓치지 마세요</h2><label className="alert-switch"><input type="checkbox" checked={alertsEnabled} onChange={(event) => { setAlertsEnabled(event.target.checked); setNotice(event.target.checked ? "방문 전 알림을 켰습니다." : "방문 전 알림을 껐습니다."); }} /><span>방문 전날 다시 확인해서 알려주기</span></label>{alertsEnabled ? <><div className="alert-list"><article><i aria-hidden="true">✓</i><div><strong>시설에서 운영 상태를 확인했습니다</strong><p>{planActivity ? `${planActivity.title}의 운영 및 접근 정보를 확인했습니다.` : "추천 활동의 운영 및 접근 정보를 확인했습니다."}</p><small>오늘 09:20</small></div></article><article><i aria-hidden="true">⏱</i><div><strong>방문 전 재확인이 예정되어 있습니다</strong><p>운영·예약·승강기 상태를 다시 확인해 알려드릴게요.</p><small>{formatDate(visitDate)} 전날 예정</small></div></article></div><button className="secondary-action full" type="button" onClick={() => { setAlertsRead(true); setNotice("알림을 모두 확인했습니다."); }}>모두 확인함</button></> : <div className="panel-empty"><strong>알림이 꺼져 있습니다.</strong><p>스위치를 켜면 방문 전에 운영 상태를 다시 알려드립니다.</p></div>}</aside></div>}
+    {adminOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAdminOpen(false); }}><form className="modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-title" onSubmit={saveFacility}><button className="modal-close" type="button" aria-label="시설 정보수정 닫기" onClick={() => setAdminOpen(false)}>×</button><span className="section-label">문화시설 정보관리</span><h2 id="admin-title">오늘의 운영·지원 정보</h2><p className="admin-note">저장한 변경사항은 검색 결과·상세 보기·비교표에 바로 반영됩니다.</p><label className="facility-picker">수정할 프로그램<select value={adminActivityId} onChange={(event) => setAdminActivityId(Number(event.target.value))}>{activityData.map((activity) => <option value={activity.id} key={activity.id}>{activity.venue} · {activity.title}</option>)}</select></label><div className="admin-grid" key={adminActivityId}><label>오늘 운영 상태<select name="status" defaultValue={adminActivity.operatingStatus}><option>정상 운영</option><option>일부 운영</option><option>휴관</option></select></label><label>단체 접수<select name="groupBooking" defaultValue={adminActivity.groupBooking}><option>접수 가능</option><option>전화 문의 필요</option><option>접수 마감</option></select></label><label>휠체어 이동<select name="wheelchair" defaultValue={adminActivity.wheelchairStatus}><option>전체 경로 가능</option><option>일부 경로 가능</option><option>현재 불가</option></select></label><label>수어 통역<select name="signLanguage" defaultValue={adminActivity.signLanguage}><option>7일 전 요청 시 협의</option><option>지정 회차 제공</option><option>제공하지 않음</option><option>확인되지 않음</option></select></label><label className="wide">할인 안내<input name="discount" defaultValue={adminActivity.priceNote} /></label><label className="wide">임시 안내<textarea name="temporaryNote" rows={3} defaultValue={adminActivity.temporaryNote} placeholder="시설 점검, 접근 경로 변경 등을 입력하세요." /></label></div><div className="admin-actions"><button className="secondary-action" type="button" onClick={resetFacilityData}>예시 정보로 복원</button><button className="primary-action" type="submit">운영·지원 정보 저장</button></div></form></div>}
+  </>;
 }

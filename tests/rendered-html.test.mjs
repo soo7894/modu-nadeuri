@@ -25,6 +25,8 @@ test("server-renders the 모두나들이 homepage", async () => {
   assert.match(html, /나들이 조건을 알려주세요/);
   assert.match(html, /월별 활동 달력/);
   assert.match(html, /날짜별 활동을 한눈에/);
+  assert.match(html, /요일 빠른 선택/);
+  assert.match(html, /어느 요일에 나가실까요/);
   assert.match(html, /조건에 맞는 활동/);
   assert.match(html, /후보 비교/);
   assert.match(html, /활동계획표/);
@@ -48,6 +50,8 @@ test("keeps every prototype workflow connected", async () => {
     "calendarDays",
     "changeCalendarMonth",
     "selectCalendarDate",
+    "selectWeekday",
+    "weekdayActivityCounts",
   ]) assert.match(page, new RegExp(marker));
 
   assert.match(page, /aria-live="polite"/);

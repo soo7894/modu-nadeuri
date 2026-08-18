@@ -23,6 +23,8 @@ test("server-renders the 모두나들이 homepage", async () => {
   assert.match(html, /<html lang="ko">/i);
   assert.match(html, /<title>모두나들이 \| 모두에게 맞는 문화활동 찾기<\/title>/i);
   assert.match(html, /나들이 조건을 알려주세요/);
+  assert.match(html, /월별 활동 달력/);
+  assert.match(html, /날짜별 활동을 한눈에/);
   assert.match(html, /조건에 맞는 활동/);
   assert.match(html, /후보 비교/);
   assert.match(html, /활동계획표/);
@@ -43,6 +45,9 @@ test("keeps every prototype workflow connected", async () => {
     "aiFallbackImage",
     "AI로 생성한 이미지",
     "홈페이지 확인하기",
+    "calendarDays",
+    "changeCalendarMonth",
+    "selectCalendarDate",
   ]) assert.match(page, new RegExp(marker));
 
   assert.match(page, /aria-live="polite"/);

@@ -40,6 +40,8 @@ test("keeps every prototype workflow connected", async () => {
     "alertsEnabled",
     "modu-nadeuri-state-v2",
     "activityMedia",
+    "aiFallbackImage",
+    "AI로 생성한 이미지",
     "홈페이지 확인하기",
   ]) assert.match(page, new RegExp(marker));
 
@@ -52,5 +54,7 @@ test("keeps every prototype workflow connected", async () => {
     const photo = await stat(new URL(`../public/activities/official/${filename}`, import.meta.url));
     assert.ok(photo.size > 30_000, `${filename} should be a real official-site image`);
   }
-  assert.doesNotMatch(page, /activity-photo-grid|생성 이미지/);
+  assert.doesNotMatch(page, /activity-photo-grid/);
+  const aiFallback = await stat(new URL("../public/activities/ai/activity-fallback-grid.png", import.meta.url));
+  assert.ok(aiFallback.size > 100_000);
 });

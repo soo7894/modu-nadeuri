@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import test from "node:test";
 
 async function render() {
@@ -39,9 +39,15 @@ test("keeps every prototype workflow connected", async () => {
     "saveFacility",
     "alertsEnabled",
     "modu-nadeuri-state-v2",
+    "activityMedia",
+    "홈페이지 확인하기",
   ]) assert.match(page, new RegExp(marker));
 
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /aria-modal="true"/);
+  assert.match(page, /target="_blank" rel="noopener noreferrer"/);
   assert.doesNotMatch(page, /defaultChecked/);
+
+  const photo = await stat(new URL("../public/activities/activity-photo-grid.png", import.meta.url));
+  assert.ok(photo.size > 100_000);
 });

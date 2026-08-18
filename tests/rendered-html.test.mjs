@@ -48,6 +48,9 @@ test("keeps every prototype workflow connected", async () => {
   assert.match(page, /target="_blank" rel="noopener noreferrer"/);
   assert.doesNotMatch(page, /defaultChecked/);
 
-  const photo = await stat(new URL("../public/activities/activity-photo-grid.png", import.meta.url));
-  assert.ok(photo.size > 100_000);
+  for (const filename of ["sema.jpg", "craft.jpg", "gugak.jpg", "library.jpg", "botanic.webp", "media.jpg"]) {
+    const photo = await stat(new URL(`../public/activities/official/${filename}`, import.meta.url));
+    assert.ok(photo.size > 30_000, `${filename} should be a real official-site image`);
+  }
+  assert.doesNotMatch(page, /activity-photo-grid|생성 이미지/);
 });
